@@ -1,8 +1,25 @@
 module Main exposing (main)
 
+import Browser
 import Html exposing (text)
 
 
-main : Html.Html msg
+type alias Model =
+    {}
+
+
+main : Program () Model msg
 main =
-    text "hi"
+    Browser.sandbox
+        { init = {}
+        , update = update
+        , view = view
+        }
+
+
+update msg model =
+    model
+
+
+view model =
+    text "hello!"
