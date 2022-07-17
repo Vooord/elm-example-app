@@ -1,8 +1,8 @@
 module Main exposing (main)
 
 import Browser
-import Html exposing (button, div, form, h1, input, label, text)
-import Html.Attributes exposing (checked, class, for, id, placeholder, required, type_, value)
+import Html exposing (button, div, form, h1, input, label, li, text, ul)
+import Html.Attributes exposing (checked, class, classList, for, id, placeholder, required, type_, value)
 import Html.Events exposing (onCheck, onInput, preventDefaultOn)
 import Json.Decode as JD
 
@@ -37,6 +37,14 @@ type Msg
     | NextStep
 
 
+offices =
+    [ "Long Beach, LA"
+    , "Long Island, NY"
+    , "Greenwich, London"
+    , "Saint Denis, Paris"
+    ]
+
+
 update : Msg -> Model -> Model
 update msg model =
     case ( msg, model ) of
@@ -47,7 +55,7 @@ update msg model =
             PersonalDataStep { data | checkbox = check }
 
         ( NextStep, PersonalDataStep data ) ->
-            ChooseOfficeStep { selectedOffice = "" } data
+            ChooseOfficeStep { selectedOffice = "Long Island, NY" } data
 
         ( NextStep, ChooseOfficeStep _ _ ) ->
             Debug.todo "send to server"
@@ -78,5 +86,13 @@ view model =
                 , button [] [ text "Submit" ]
                 ]
 
-        ChooseOfficeStep chooseData personalData ->
-            Debug.todo "choose office step"
+        ChooseOfficeStep chooseData _ ->
+            ul []
+                (List.map
+                    (\o ->
+                        li
+                            [ classList [ ( "selected", o == chooseData.selectedOffice ) ] ]
+                            [ text o ]
+                    )
+                    offices
+                )

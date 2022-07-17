@@ -10,3 +10,14 @@ input[type="checkbox"] + label {
     user-select: none;
     -webkit-user-select: none;
 }
+
+li {
+    cursor: pointer;
+
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+li.selected {
+    color: cornflowerblue;
+}
