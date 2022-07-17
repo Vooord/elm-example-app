@@ -3,7 +3,8 @@ module Main exposing (main)
 import Browser
 import Html exposing (button, div, form, h1, input, label, text)
 import Html.Attributes exposing (checked, class, for, id, placeholder, required, type_, value)
-import Html.Events exposing (onCheck, onInput)
+import Html.Events exposing (onCheck, onInput, preventDefaultOn)
+import Json.Decode as JD
 
 
 type alias PersonalData =
@@ -33,6 +34,7 @@ main =
 type Msg
     = ChangeEmail String
     | ChangeCheckbox Bool
+    | NextStep
 
 
 update : Msg -> Model -> Model
@@ -44,6 +46,12 @@ update msg model =
         ( ChangeCheckbox check, PersonalDataStep data ) ->
             PersonalDataStep { data | checkbox = check }
 
+        ( NextStep, PersonalDataStep data ) ->
+            ChooseOfficeStep { selectedOffice = "" } data
+
+        ( NextStep, ChooseOfficeStep _ _ ) ->
+            Debug.todo "send to server"
+
         ( _, ChooseOfficeStep _ _ ) ->
             model
 
@@ -53,7 +61,7 @@ view model =
     case model of
         -- so you can destruct a record and use it as-is in the same time
         PersonalDataStep ({ email, checkbox } as data) ->
-            form [ class "form" ]
+            form [ class "form", preventDefaultOn "submit" (JD.succeed ( NextStep, True )) ]
                 [ h1 [] [ text "Do you wanna work in FAANG?" ]
                 , input [ placeholder "email", onInput ChangeEmail, value email ] []
                 , div []
