@@ -6,19 +6,20 @@ import Html.Attributes exposing (checked, class, for, id, placeholder, required,
 import Html.Events exposing (onCheck, onInput)
 
 
-type alias Model =
+type alias PersonalData =
     { email : String
     , checkbox : Bool
     }
 
 
+type alias Model =
+    PersonalData
+
+
 main : Program () Model Msg
 main =
     Browser.sandbox
-        { init =
-            { email = ""
-            , checkbox = False
-            }
+        { init = PersonalData "" False
         , update = update
         , view = view
         }
