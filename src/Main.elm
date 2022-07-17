@@ -15,7 +15,9 @@ type alias PersonalData =
 
 
 type alias ChooseOfficeData =
-    { officeInfo : Maybe OfficeInfo }
+    { officeInfo : Maybe OfficeInfo
+    , showAsMap : Bool
+    }
 
 
 type OfficeInfo
@@ -75,7 +77,7 @@ update msg model =
                 |> withNoSideEffect
 
         ( NextStep, PersonalDataStep data ) ->
-            ( ChooseOfficeStep { officeInfo = Nothing } data
+            ( ChooseOfficeStep (ChooseOfficeData Nothing False) data
             , Http.get
                 { url = "https://mocki.io/v1/8f3038e5-0341-4089-ac88-085c43b03ad7"
                 , expect = Http.expectJson GotOfficeList officeListDecoder
@@ -135,9 +137,19 @@ view model =
             chooseData.officeInfo
                 |> Maybe.map
                     (\(OfficeInfo selectedOffice officeList) ->
-                        officeList
-                            |> List.map (renderOfficeLi selectedOffice)
-                            |> ul []
+                        div []
+                            [ div []
+                                [ input [ id "show-as-map-check", type_ "checkbox", checked chooseData.showAsMap ] []
+                                , label [ for "show-as-map-check" ] [ text "Show as map" ]
+                                ]
+                            , if chooseData.showAsMap then
+                                div [] [ text "todo map" ]
+
+                              else
+                                officeList
+                                    |> List.map (renderOfficeLi selectedOffice)
+                                    |> ul []
+                            ]
                     )
                 |> Maybe.withDefault (text "Loading office list...")
 

@@ -12,6 +12,7 @@ input[type="checkbox"] + label {
 }
 
 li {
+    width: fit-content;
     cursor: pointer;
 
     user-select: none;
