@@ -22,3 +22,7 @@ li {
 li.selected {
     color: cornflowerblue;
 }
+
+.error {
+    color: darkred;
+}

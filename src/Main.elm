@@ -17,6 +17,7 @@ type alias PersonalData =
 type alias ChooseOfficeData =
     { officeInfo : Maybe OfficeInfo
     , showAsMap : Bool
+    , error : Maybe String
     }
 
 
@@ -78,7 +79,7 @@ update msg model =
                 |> withNoSideEffect
 
         ( NextStep, PersonalDataStep data ) ->
-            ( ChooseOfficeStep (ChooseOfficeData Nothing False) data
+            ( ChooseOfficeStep (ChooseOfficeData Nothing False Nothing) data
             , Http.get
                 { url = "https://mocki.io/v1/8f3038e5-0341-4089-ac88-085c43b03ad7"
                 , expect = Http.expectJson GotOfficeList officeListDecoder
@@ -101,15 +102,26 @@ update msg model =
                         |> withNoSideEffect
 
         ( SelectOffice newOffice, ChooseOfficeStep chD persD ) ->
-            ChooseOfficeStep { chD | officeInfo = selectOffice newOffice chD.officeInfo } persD
+            ChooseOfficeStep { chD | officeInfo = selectOffice newOffice chD.officeInfo, error = Nothing } persD
                 |> withNoSideEffect
 
         ( ShowMap show, ChooseOfficeStep chooseData personalData ) ->
             ChooseOfficeStep { chooseData | showAsMap = show } personalData
                 |> withNoSideEffect
 
-        ( NextStep, ChooseOfficeStep _ _ ) ->
-            Debug.todo "send to server"
+        ( NextStep, ChooseOfficeStep ({ officeInfo } as cd) ({ email, checkbox } as pd) ) ->
+            case officeInfo of
+                Just (OfficeInfo selectedOffice _) ->
+                    if selectedOffice == Nothing then
+                        ChooseOfficeStep { cd | error = Just "You must know why are you selling your soul." } pd
+                            |> withNoSideEffect
+
+                    else
+                        Debug.todo "next step"
+
+                Nothing ->
+                    ChooseOfficeStep { cd | error = Just "There's no valid office information yet." } pd
+                        |> withNoSideEffect
 
         ( _, ChooseOfficeStep _ _ ) ->
             model
@@ -154,6 +166,12 @@ view model =
                                 officeList
                                     |> List.map (renderOfficeLi selectedOffice)
                                     |> ul []
+                            , case chooseData.error of
+                                Just error ->
+                                    div [ class "error" ] [ text error ]
+
+                                Nothing ->
+                                    button [ onClick NextStep ] [ text "Save" ]
                             ]
                     )
                 |> Maybe.withDefault (text "Loading office list...")
