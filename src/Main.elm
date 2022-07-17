@@ -94,23 +94,21 @@ view model =
                 ]
 
         ChooseOfficeStep chooseData _ ->
-            ul []
-                (List.map
-                    (\o ->
-                        li
-                            [ onClick (SelectOffice o)
-                            , classList
-                                [ ( "selected"
-                                  , case chooseData.selectedOffice of
-                                        Just selectedOffice ->
-                                            o == selectedOffice
+            ul [] (List.map (renderOfficeLi chooseData.selectedOffice) offices)
 
-                                        Nothing ->
-                                            False
-                                  )
-                                ]
-                            ]
-                            [ text o ]
-                    )
-                    offices
-                )
+
+renderOfficeLi maybeSelectedOffice o =
+    let
+        isSelected =
+            case maybeSelectedOffice of
+                Just selectedOffice ->
+                    o == selectedOffice
+
+                Nothing ->
+                    False
+    in
+    li
+        [ onClick (SelectOffice o)
+        , classList [ ( "selected", isSelected ) ]
+        ]
+        [ text o ]
