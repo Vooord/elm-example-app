@@ -14,7 +14,7 @@ type alias PersonalData =
 
 
 type alias ChooseOfficeData =
-    { selectedOffice : String }
+    { selectedOffice : Maybe String }
 
 
 type Model
@@ -56,13 +56,13 @@ update msg model =
             PersonalDataStep { data | checkbox = check }
 
         ( NextStep, PersonalDataStep data ) ->
-            ChooseOfficeStep { selectedOffice = "Long Island, NY" } data
+            ChooseOfficeStep { selectedOffice = Nothing } data
 
         ( _, PersonalDataStep _ ) ->
             model
 
         ( SelectOffice o, ChooseOfficeStep chooseData personalData ) ->
-            ChooseOfficeStep { chooseData | selectedOffice = o } personalData
+            ChooseOfficeStep { chooseData | selectedOffice = Just o } personalData
 
         ( NextStep, ChooseOfficeStep _ _ ) ->
             Debug.todo "send to server"
@@ -99,7 +99,16 @@ view model =
                     (\o ->
                         li
                             [ onClick (SelectOffice o)
-                            , classList [ ( "selected", o == chooseData.selectedOffice ) ]
+                            , classList
+                                [ ( "selected"
+                                  , case chooseData.selectedOffice of
+                                        Just selectedOffice ->
+                                            o == selectedOffice
+
+                                        Nothing ->
+                                            False
+                                  )
+                                ]
                             ]
                             [ text o ]
                     )
