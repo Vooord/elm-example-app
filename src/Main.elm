@@ -12,14 +12,19 @@ type alias PersonalData =
     }
 
 
-type alias Model =
-    PersonalData
+type alias ChooseOfficeData =
+    { selectedOffice : String }
+
+
+type Model
+    = PersonalDataStep PersonalData
+    | ChooseOfficeStep ChooseOfficeData PersonalData
 
 
 main : Program () Model Msg
 main =
     Browser.sandbox
-        { init = PersonalData "" False
+        { init = PersonalDataStep (PersonalData "" False)
         , update = update
         , view = view
         }
@@ -32,29 +37,37 @@ type Msg
 
 update : Msg -> Model -> Model
 update msg model =
-    case msg of
-        ChangeEmail email ->
-            { model | email = email }
+    case ( msg, model ) of
+        ( ChangeEmail email, PersonalDataStep data ) ->
+            PersonalDataStep { data | email = email }
 
-        ChangeCheckbox check ->
-            { model | checkbox = check }
+        ( ChangeCheckbox check, PersonalDataStep data ) ->
+            PersonalDataStep { data | checkbox = check }
+
+        ( _, ChooseOfficeStep _ _ ) ->
+            model
 
 
 view : Model -> Html.Html Msg
 view model =
-    form [ class "form" ]
-        [ h1 [] [ text "Do you wanna work in FAANG?" ]
-        , input [ placeholder "email", onInput ChangeEmail, value model.email ] []
-        , div []
-            [ input
-                [ id "check"
-                , type_ "checkbox"
-                , required True
-                , onCheck ChangeCheckbox
-                , checked model.checkbox
+    case model of
+        PersonalDataStep personalData ->
+            form [ class "form" ]
+                [ h1 [] [ text "Do you wanna work in FAANG?" ]
+                , input [ placeholder "email", onInput ChangeEmail, value personalData.email ] []
+                , div []
+                    [ input
+                        [ id "check"
+                        , type_ "checkbox"
+                        , required True
+                        , onCheck ChangeCheckbox
+                        , checked personalData.checkbox
+                        ]
+                        []
+                    , label [ for "check" ] [ text "I agree to sell my soul." ]
+                    ]
+                , button [] [ text "Submit" ]
                 ]
-                []
-            , label [ for "check" ] [ text "I agree to sell my soul." ]
-            ]
-        , button [] [ text "Submit" ]
-        ]
+
+        ChooseOfficeStep chooseData personalData ->
+            Debug.todo "choose office step"
