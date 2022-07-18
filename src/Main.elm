@@ -6,6 +6,7 @@ import Html.Attributes exposing (checked, class, classList, for, id, placeholder
 import Html.Events exposing (onCheck, onClick, onInput, preventDefaultOn)
 import Http
 import Json.Decode as JD
+import Time
 
 
 type alias PersonalData =
@@ -36,6 +37,12 @@ type alias OfficeList =
 type Model
     = PersonalDataStep PersonalData
     | ChooseOfficeStep ChooseOfficeData PersonalData
+    | ChooseInterviewSlot
+        { email : String
+        , checkbox : Bool
+        , selectedOffice : String
+        , slot : Maybe Time.Posix
+        }
 
 
 main : Program () Model Msg
@@ -112,18 +119,33 @@ update msg model =
         ( NextStep, ChooseOfficeStep ({ officeInfo } as cd) ({ email, checkbox } as pd) ) ->
             case officeInfo of
                 Just (OfficeInfo selectedOffice _) ->
-                    if selectedOffice == Nothing then
-                        ChooseOfficeStep { cd | error = Just "You must know why are you selling your soul." } pd
-                            |> withNoSideEffect
+                    case selectedOffice of
+                        Just office ->
+                            -- we forget about `showAsMap` and `error` as those props are not relevant for the next step
+                            ChooseInterviewSlot
+                                { email = email
+                                , checkbox = checkbox
+                                , selectedOffice = office
+                                , slot = Nothing
+                                }
+                                |> withNoSideEffect
 
-                    else
-                        Debug.todo "next step"
+                        Nothing ->
+                            ChooseOfficeStep { cd | error = Just "You must know why are you selling your soul." } pd
+                                |> withNoSideEffect
 
                 Nothing ->
                     ChooseOfficeStep { cd | error = Just "There's no valid office information yet." } pd
                         |> withNoSideEffect
 
         ( _, ChooseOfficeStep _ _ ) ->
+            model
+                |> withNoSideEffect
+
+        ( NextStep, ChooseInterviewSlot data ) ->
+            Debug.todo "send to server"
+
+        ( _, ChooseInterviewSlot data ) ->
             model
                 |> withNoSideEffect
 
@@ -175,6 +197,10 @@ view model =
                             ]
                     )
                 |> Maybe.withDefault (text "Loading office list...")
+
+        ChooseInterviewSlot _ ->
+            -- TODO
+            div [] [ text "To be continued..." ]
 
 
 selectOffice : String -> Maybe OfficeInfo -> Maybe OfficeInfo
