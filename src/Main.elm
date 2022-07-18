@@ -40,7 +40,7 @@ type Model
 main : Program () Model Msg
 main =
     Browser.element
-        { init = \_ -> ( PersonalDataStep (PersonalData "" False), Cmd.none )
+        { init = \_ -> ( PersonalDataStep <| PersonalData "" False, Cmd.none )
         , update = update
         , view = view
         , subscriptions = \_ -> Sub.none
