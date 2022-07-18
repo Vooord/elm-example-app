@@ -94,7 +94,9 @@ view model =
                 ]
 
         ChooseOfficeStep chooseData _ ->
-            ul [] (List.map (renderOfficeLi chooseData.selectedOffice) offices)
+            offices
+                |> List.map (renderOfficeLi chooseData.selectedOffice)
+                |> ul []
 
 
 renderOfficeLi maybeSelectedOffice o =
