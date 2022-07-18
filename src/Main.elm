@@ -51,6 +51,7 @@ type Msg
     = ChangeEmail String
     | ChangeCheckbox Bool
     | SelectOffice String
+    | ShowMap Bool
     | NextStep
     | GotOfficeList (Result Http.Error (List String))
 
@@ -103,6 +104,10 @@ update msg model =
             ChooseOfficeStep { chD | officeInfo = selectOffice newOffice chD.officeInfo } persD
                 |> withNoSideEffect
 
+        ( ShowMap show, ChooseOfficeStep chooseData personalData ) ->
+            ChooseOfficeStep { chooseData | showAsMap = show } personalData
+                |> withNoSideEffect
+
         ( NextStep, ChooseOfficeStep _ _ ) ->
             Debug.todo "send to server"
 
@@ -139,7 +144,7 @@ view model =
                     (\(OfficeInfo selectedOffice officeList) ->
                         div []
                             [ div []
-                                [ input [ id "show-as-map-check", type_ "checkbox", checked chooseData.showAsMap ] []
+                                [ input [ id "show-as-map-check", type_ "checkbox", checked chooseData.showAsMap, onCheck ShowMap ] []
                                 , label [ for "show-as-map-check" ] [ text "Show as map" ]
                                 ]
                             , if chooseData.showAsMap then
