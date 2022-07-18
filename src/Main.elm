@@ -51,17 +51,18 @@ update msg model =
 view : Model -> Html.Html Msg
 view model =
     case model of
-        PersonalDataStep personalData ->
+        -- so you can destruct a record and use it as-is in the same time
+        PersonalDataStep ({ email, checkbox } as data) ->
             form [ class "form" ]
                 [ h1 [] [ text "Do you wanna work in FAANG?" ]
-                , input [ placeholder "email", onInput ChangeEmail, value personalData.email ] []
+                , input [ placeholder "email", onInput ChangeEmail, value email ] []
                 , div []
                     [ input
                         [ id "check"
                         , type_ "checkbox"
                         , required True
                         , onCheck ChangeCheckbox
-                        , checked personalData.checkbox
+                        , checked checkbox
                         ]
                         []
                     , label [ for "check" ] [ text "I agree to sell my soul." ]
