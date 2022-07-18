@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser
 import Html exposing (button, div, form, h1, input, label, li, text, ul)
 import Html.Attributes exposing (checked, class, classList, for, id, placeholder, required, type_, value)
-import Html.Events exposing (onCheck, onInput, preventDefaultOn)
+import Html.Events exposing (onCheck, onClick, onInput, preventDefaultOn)
 import Json.Decode as JD
 
 
@@ -34,6 +34,7 @@ main =
 type Msg
     = ChangeEmail String
     | ChangeCheckbox Bool
+    | SelectOffice String
     | NextStep
 
 
@@ -56,6 +57,12 @@ update msg model =
 
         ( NextStep, PersonalDataStep data ) ->
             ChooseOfficeStep { selectedOffice = "Long Island, NY" } data
+
+        ( _, PersonalDataStep _ ) ->
+            model
+
+        ( SelectOffice o, ChooseOfficeStep chooseData personalData ) ->
+            ChooseOfficeStep { chooseData | selectedOffice = o } personalData
 
         ( NextStep, ChooseOfficeStep _ _ ) ->
             Debug.todo "send to server"
@@ -91,7 +98,9 @@ view model =
                 (List.map
                     (\o ->
                         li
-                            [ classList [ ( "selected", o == chooseData.selectedOffice ) ] ]
+                            [ onClick (SelectOffice o)
+                            , classList [ ( "selected", o == chooseData.selectedOffice ) ]
+                            ]
                             [ text o ]
                     )
                     offices
