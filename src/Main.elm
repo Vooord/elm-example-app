@@ -15,7 +15,19 @@ type alias PersonalData =
 
 
 type alias ChooseOfficeData =
-    { officeList : Maybe (List String), selectedOffice : Maybe String }
+    { officeInfo : Maybe OfficeInfo }
+
+
+type OfficeInfo
+    = OfficeInfo SelectedOffice OfficeList
+
+
+type alias SelectedOffice =
+    Maybe String
+
+
+type alias OfficeList =
+    List String
 
 
 type Model
@@ -63,7 +75,7 @@ update msg model =
                 |> withNoSideEffect
 
         ( NextStep, PersonalDataStep data ) ->
-            ( ChooseOfficeStep { officeList = Nothing, selectedOffice = Nothing } data
+            ( ChooseOfficeStep { officeInfo = Nothing } data
             , Http.get
                 { url = "https://mocki.io/v1/8f3038e5-0341-4089-ac88-085c43b03ad7"
                 , expect = Http.expectJson GotOfficeList officeListDecoder
@@ -77,7 +89,7 @@ update msg model =
         ( GotOfficeList result, ChooseOfficeStep chooseData pd ) ->
             case result of
                 Ok officeList ->
-                    ChooseOfficeStep { chooseData | officeList = Just officeList } pd
+                    ChooseOfficeStep { chooseData | officeInfo = Just (OfficeInfo Nothing officeList) } pd
                         |> withNoSideEffect
 
                 -- TODO
@@ -85,8 +97,8 @@ update msg model =
                     model
                         |> withNoSideEffect
 
-        ( SelectOffice o, ChooseOfficeStep chooseData personalData ) ->
-            ChooseOfficeStep { chooseData | selectedOffice = Just o } personalData
+        ( SelectOffice newOffice, ChooseOfficeStep chD persD ) ->
+            ChooseOfficeStep { chD | officeInfo = selectOffice newOffice chD.officeInfo } persD
                 |> withNoSideEffect
 
         ( NextStep, ChooseOfficeStep _ _ ) ->
@@ -120,14 +132,24 @@ view model =
                 ]
 
         ChooseOfficeStep chooseData _ ->
-            chooseData.officeList
+            chooseData.officeInfo
                 |> Maybe.map
-                    (\officeList ->
+                    (\(OfficeInfo selectedOffice officeList) ->
                         officeList
-                            |> List.map (renderOfficeLi chooseData.selectedOffice)
+                            |> List.map (renderOfficeLi selectedOffice)
                             |> ul []
                     )
                 |> Maybe.withDefault (text "Loading office list...")
+
+
+selectOffice : String -> Maybe OfficeInfo -> Maybe OfficeInfo
+selectOffice newSelectedOffice maybeOfficeInfo =
+    case maybeOfficeInfo of
+        Just (OfficeInfo _ officeList) ->
+            Just <| OfficeInfo (Just newSelectedOffice) officeList
+
+        Nothing ->
+            maybeOfficeInfo
 
 
 officeListDecoder : JD.Decoder (List String)
