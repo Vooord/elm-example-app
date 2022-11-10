@@ -24,10 +24,11 @@ type Model
 
 main : Program () Model Msg
 main =
-    Browser.sandbox
-        { init = PersonalDataStep (PersonalData "" False)
+    Browser.element
+        { init = \_ -> ( PersonalDataStep (PersonalData "" False), Cmd.none )
         , update = update
         , view = view
+        , subscriptions = \_ -> Sub.none
         }
 
 
@@ -46,29 +47,36 @@ offices =
     ]
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case ( msg, model ) of
         ( ChangeEmail email, PersonalDataStep data ) ->
             PersonalDataStep { data | email = email }
+                |> withNoSideEffect
 
         ( ChangeCheckbox check, PersonalDataStep data ) ->
             PersonalDataStep { data | checkbox = check }
+                |> withNoSideEffect
 
         ( NextStep, PersonalDataStep data ) ->
+            -- TODO: request office list from the server
             ChooseOfficeStep { selectedOffice = Nothing } data
+                |> withNoSideEffect
 
         ( _, PersonalDataStep _ ) ->
             model
+                |> withNoSideEffect
 
         ( SelectOffice o, ChooseOfficeStep chooseData personalData ) ->
             ChooseOfficeStep { chooseData | selectedOffice = Just o } personalData
+                |> withNoSideEffect
 
         ( NextStep, ChooseOfficeStep _ _ ) ->
             Debug.todo "send to server"
 
         ( _, ChooseOfficeStep _ _ ) ->
             model
+                |> withNoSideEffect
 
 
 view : Model -> Html.Html Msg
@@ -114,3 +122,8 @@ renderOfficeLi maybeSelectedOffice o =
         , classList [ ( "selected", isSelected ) ]
         ]
         [ text o ]
+
+
+withNoSideEffect : a -> ( a, Cmd msg )
+withNoSideEffect model =
+    ( model, Cmd.none )
