@@ -4,6 +4,7 @@ import Browser
 import Html exposing (button, div, form, h1, input, label, li, text, ul)
 import Html.Attributes exposing (checked, class, classList, for, id, placeholder, required, type_, value)
 import Html.Events exposing (onCheck, onClick, onInput, preventDefaultOn)
+import Http
 import Json.Decode as JD
 
 
@@ -14,7 +15,7 @@ type alias PersonalData =
 
 
 type alias ChooseOfficeData =
-    { selectedOffice : Maybe String }
+    { officeList : Maybe (List String), selectedOffice : Maybe String }
 
 
 type Model
@@ -37,14 +38,17 @@ type Msg
     | ChangeCheckbox Bool
     | SelectOffice String
     | NextStep
+    | GotOfficeList (Result Http.Error (List String))
 
 
-offices =
-    [ "Long Beach, LA"
-    , "Long Island, NY"
-    , "Greenwich, London"
-    , "Saint Denis, Paris"
-    ]
+
+{- Expected office list from API:
+   [ "Long Beach, LA"
+   , "Long Island, NY"
+   , "Greenwich, London"
+   , "Saint Denis, Paris"
+   ]
+-}
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -59,13 +63,27 @@ update msg model =
                 |> withNoSideEffect
 
         ( NextStep, PersonalDataStep data ) ->
-            -- TODO: request office list from the server
-            ChooseOfficeStep { selectedOffice = Nothing } data
-                |> withNoSideEffect
+            ( ChooseOfficeStep { officeList = Nothing, selectedOffice = Nothing } data
+            , Http.get
+                { url = "https://mocki.io/v1/8f3038e5-0341-4089-ac88-085c43b03ad7"
+                , expect = Http.expectJson GotOfficeList officeListDecoder
+                }
+            )
 
         ( _, PersonalDataStep _ ) ->
             model
                 |> withNoSideEffect
+
+        ( GotOfficeList result, ChooseOfficeStep chooseData pd ) ->
+            case result of
+                Ok officeList ->
+                    ChooseOfficeStep { chooseData | officeList = Just officeList } pd
+                        |> withNoSideEffect
+
+                -- TODO
+                Err _ ->
+                    model
+                        |> withNoSideEffect
 
         ( SelectOffice o, ChooseOfficeStep chooseData personalData ) ->
             ChooseOfficeStep { chooseData | selectedOffice = Just o } personalData
@@ -102,9 +120,19 @@ view model =
                 ]
 
         ChooseOfficeStep chooseData _ ->
-            offices
-                |> List.map (renderOfficeLi chooseData.selectedOffice)
-                |> ul []
+            chooseData.officeList
+                |> Maybe.map
+                    (\officeList ->
+                        officeList
+                            |> List.map (renderOfficeLi chooseData.selectedOffice)
+                            |> ul []
+                    )
+                |> Maybe.withDefault (text "Loading office list...")
+
+
+officeListDecoder : JD.Decoder (List String)
+officeListDecoder =
+    JD.list JD.string
 
 
 renderOfficeLi maybeSelectedOffice o =
